@@ -119,6 +119,26 @@ fi
 ])dnl
 
 dnl
+dnl Detect time zone file directory, if any.
+dnl
+AC_DEFUN([SUDO_TZDIR], [AC_MSG_CHECKING(time zone data directory)
+tzdir="$with_tzdir"
+if test -z "$tzdir"; then
+    tzdir=no
+    for d in /usr/share /usr/share/lib /usr/lib /etc; do
+	if test -d "$d/zoneinfo"; then
+	    tzdir="$d/zoneinfo"
+	    break
+	fi
+    done
+fi
+AC_MSG_RESULT([$tzdir])
+if test "${tzdir}" != "no"; then
+    SUDO_DEFINE_UNQUOTED(_PATH_ZONEINFO, "$tzdir")
+fi
+])dnl
+
+dnl
 dnl Where the timestamp files go.
 dnl
 AC_DEFUN([SUDO_TIMEDIR], [AC_MSG_CHECKING(for timestamp file location)
