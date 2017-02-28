@@ -16,7 +16,6 @@ License:    BSD3c
 URL:        http://www.sudo.ws/
 Source0:    %{name}-%{version}.tar.gz
 Source1:    sudo.pamd
-Source100:  sudo.yaml
 BuildRequires:  pam-devel
 
 %description
