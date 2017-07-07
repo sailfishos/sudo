@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 Todd C. Miller <Todd.Miller@courtesan.com>
+ * Copyright (c) 2010-2016 Todd C. Miller <Todd.Miller@courtesan.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _SUDO_EXEC_H
-#define _SUDO_EXEC_H
+#ifndef SUDO_EXEC_H
+#define SUDO_EXEC_H
 
 /*
  * Older systems may not support MSG_WAITALL but it shouldn't really be needed.
@@ -23,6 +23,27 @@
 #ifndef MSG_WAITALL
 # define MSG_WAITALL 0
 #endif
+
+/*
+ * Some older systems support siginfo but predate SI_USER.
+ */
+#ifdef SA_SIGINFO
+# ifdef SI_USER
+#  define USER_SIGNALED(_info) ((_info) != NULL && (_info)->si_code == SI_USER)
+# else
+#  define USER_SIGNALED(_info) ((_info) != NULL && (_info)->si_code <= 0)
+# endif
+#endif
+
+/*
+ * Indices into io_fds[] when running a command in a pty.
+ */
+#define SFD_STDIN	0
+#define SFD_STDOUT	1
+#define SFD_STDERR	2
+#define SFD_MASTER	3
+#define SFD_SLAVE	4
+#define SFD_USERTTY	5
 
 /*
  * Special values to indicate whether continuing in foreground or background.
@@ -48,34 +69,49 @@
 #define SAVED_SIGUSR2	12
 
 /*
- * Symbols shared between exec.c and exec_pty.c
+ * Error codes for sesh
  */
+#define SESH_SUCCESS	    0		/* successful operation */
+#define SESH_ERR_FAILURE    1		/* unspecified error */
+#define SESH_ERR_INVALID    30		/* invalid -e arg value */
+#define SESH_ERR_BAD_PATHS  31		/* odd number of paths */
+#define SESH_ERR_NO_FILES   32		/* copy error, no files copied */
+#define SESH_ERR_SOME_FILES 33		/* copy error, some files copied */
 
-/* exec.c */
-struct sudo_event_base;
-int sudo_execve(const char *path, char *const argv[], char *const envp[], bool noexec);
-extern volatile pid_t cmnd_pid;
-
-/* exec_pty.c */
+/*
+ * Symbols shared between exec.c, exec_nopty.c, exec_pty.c and exec_monitor.c
+ */
 struct command_details;
 struct command_status;
-int fork_pty(struct command_details *details, int sv[], sigset_t *omask);
-int suspend_parent(int signo);
-void exec_cmnd(struct command_details *details, struct command_status *cstat,
-    int errfd);
-void add_io_events(struct sudo_event_base *evbase);
-#ifdef SA_SIGINFO
-void handler(int s, siginfo_t *info, void *context);
-#else
-void handler(int s);
-#endif
-void pty_close(struct command_status *cstat);
-void pty_setup(uid_t uid, const char *tty, const char *utmp_user);
+
+/* exec.c */
+extern volatile pid_t cmnd_pid, ppgrp;
+void exec_cmnd(struct command_details *details, int errfd);
 void terminate_command(pid_t pid, bool use_pgrp);
+#ifdef SA_SIGINFO
+void exec_handler(int s, siginfo_t *info, void *context);
+#else
+void exec_handler(int s);
+#endif
+
+/* exec_common.c */
+int sudo_execve(int fd, const char *path, char *const argv[], char *envp[], bool noexec);
+char **disable_execute(char *envp[], const char *dso);
+
+/* exec_nopty.c */
+int exec_nopty(struct command_details *details, struct command_status *cstat);
+
+/* exec_pty.c */
+int exec_pty(struct command_details *details, struct command_status *cstat);
+void pty_cleanup(void);
+int pty_make_controlling(void);
+
+/* exec_monitor.c */
+int exec_monitor(struct command_details *details, bool foreground, int backchannel);
 
 /* utmp.c */
 bool utmp_login(const char *from_line, const char *to_line, int ttyfd,
     const char *user);
 bool utmp_logout(const char *line, int status);
 
-#endif /* _SUDO_EXEC_H */
+#endif /* SUDO_EXEC_H */

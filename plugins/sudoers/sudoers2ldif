@@ -15,6 +15,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
+use warnings;
 use strict;
 
 #
@@ -27,11 +28,10 @@ use strict;
 #   Does not yet remove quotation marks from options
 #   Does not yet escape + at the beginning of a dn
 #   Does not yet handle line wraps correctly
-#   Does not yet handle multiple roles with same name (needs tiebreaker)
 #
 # CAVEATS:
 #   Sudoers entries can have multiple RunAs entries that override former ones,
-#	with LDAP sudoRunAs{Group,User} applies to all commands in a sudoRole
+#       with LDAP sudoRunAs{Group,User} applies to all commands in a sudoRole
 
 my %RA;
 my %UA;
@@ -39,9 +39,12 @@ my %HA;
 my %CA;
 my $base=$ENV{SUDOERS_BASE} or die "$0: Container SUDOERS_BASE undefined\n";
 my @options=();
+my $notBefore;
+my $notAfter;
 
 my $did_defaults=0;
 my $order = 0;
+my %seen_users;
 
 # parse sudoers one line at a time
 while (<>){
@@ -58,12 +61,12 @@ while (<>){
   # ignore blank lines
   next if /^\s*$/;
 
-  if (/^Defaults\s+/i) {
-    my $opt=$';
-    $opt=~s/\s+$//; # remove trailing whitespace
-    push @options,$opt;
+  if (s/^Defaults\s+//) {
+    s/\s+$//; # remove trailing whitespace
+    # remove spaces between '!', '=', '+=' and '-='
+    s/^(\S+)\s*([\+-]?=)\s*(\S.*)$/$1$2$3/ unless s/^!\s*(\S.*)$/!$1/;
+    push @options, $_;
   } elsif (/^(\S+)\s+([^=]+)=\s*(.*)/) {
-
     # Aliases or Definitions
     my ($p1,$p2,$p3)=($1,$2,$3);
     $p2=~s/\s+$//; # remove trailing whitespace
@@ -91,37 +94,46 @@ while (<>){
       }
       # Definition
       my @users=split /\s*,\s*/,$p1;
+      my $username = $users[0];
+      if ($seen_users{$username}) {
+          $seen_users{$username} += 1;
+          $username = sprintf("%s_%s", $username, $seen_users{$username});
+      } else {
+          $seen_users{$username} = 1;
+      }
       my @hosts=split /\s*,\s*/,$p2;
       my @cmds= split /\s*,\s*/,$p3;
       @options=();
-      print "dn: cn=$users[0],$base\n";
+      undef $notBefore;
+      undef $notAfter;
+      print "dn: cn=$username,$base\n";
       print "objectClass: top\n";
       print "objectClass: sudoRole\n";
-      print "cn: $users[0]\n";
+      print "cn: $username\n";
       # will clobber options
       print "sudoUser: $_\n"   foreach expand(\%UA,@users);
       print "sudoHost: $_\n"   foreach expand(\%HA,@hosts);
       foreach (@cmds) {
-	if (s/^\(([^\)]+)\)\s*//) {
-	  my @runas = split(/:\s*/, $1);
-	  if (defined($runas[0])) {
-	    print "sudoRunAsUser: $_\n" foreach expand(\%RA, split(/,\s*/, $runas[0]));
-	  }
-	  if (defined($runas[1])) {
-	    print "sudoRunAsGroup: $_\n" foreach expand(\%RA, split(/,\s*/, $runas[1]));
-	  }
-	}
+        if (s/^\(([^\)]+)\)\s*//) {
+          my @runas = split(/:\s*/, $1);
+          if (defined($runas[0])) {
+            print "sudoRunAsUser: $_\n" foreach expand(\%RA, split(/,\s*/, $runas[0]));
+          }
+          if (defined($runas[1])) {
+            print "sudoRunAsGroup: $_\n" foreach expand(\%RA, split(/,\s*/, $runas[1]));
+          }
+        }
       }
       print "sudoCommand: $_\n" foreach expand(\%CA,@cmds);
+      print "sudoNotBefore: $notBefore\n" if defined($notBefore);
+      print "sudoNotAfter: $notAfter\n" if defined($notAfter);
       print "sudoOption: $_\n" foreach @options;
       printf "sudoOrder: %d\n", ++$order;
       print "\n";
     }
-
   } else {
     print "parse error: $_\n";
   }
-
 }
 
 #
@@ -132,7 +144,16 @@ sub expand{
 
   # preen the line a little
   foreach (@_){
-    # if NOPASSWD: directive found, mark entire entry as not requiring
+    # Convert upper case command options
+    s/TIMEOUT=(\S+)\s*// && push @options,"timeout=$1";
+    s/ROLE=(\S+)\s*// && push @options,"role=$1";
+    s/TYPE=(\S+)\s*// && push @options,"type=$1";
+    s/PRIVS=(\S+)\s*// && push @options,"privs=$1";
+    s/LIMITPRIVS=(\S+)\s*// && push @options,"limitprivs=$1";
+    s/NOTBEFORE=(\S+)\s*// &&  do { $notBefore=$1 };
+    s/NOTAFTER=(\S+)\s*// && do { $notAfter=$1 };
+
+    # Convert command tags to options
     s/NOPASSWD:\s*// && push @options,"!authenticate";
     s/PASSWD:\s*// && push @options,"authenticate";
     s/NOEXEC:\s*// && push @options,"noexec";
@@ -151,5 +172,3 @@ sub expand{
   push @a,$ref->{$_} ? expand($ref,split /\s*,\s*/,$ref->{$_}):$_ foreach @_;
   @a;
 }
-
-
