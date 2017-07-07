@@ -21,22 +21,29 @@
 #define NOLOG_INPUT 277
 #define LOG_OUTPUT 278
 #define NOLOG_OUTPUT 279
-#define ALL 280
-#define COMMENT 281
-#define HOSTALIAS 282
-#define CMNDALIAS 283
-#define USERALIAS 284
-#define RUNASALIAS 285
-#define ERROR 286
-#define TYPE 287
-#define ROLE 288
-#define PRIVS 289
-#define LIMITPRIVS 290
-#define MYSELF 291
-#define SHA224 292
-#define SHA256 293
-#define SHA384 294
-#define SHA512 295
+#define MAIL 280
+#define NOMAIL 281
+#define FOLLOW 282
+#define NOFOLLOW 283
+#define ALL 284
+#define COMMENT 285
+#define HOSTALIAS 286
+#define CMNDALIAS 287
+#define USERALIAS 288
+#define RUNASALIAS 289
+#define ERROR 290
+#define TYPE 291
+#define ROLE 292
+#define PRIVS 293
+#define LIMITPRIVS 294
+#define CMND_TIMEOUT 295
+#define NOTBEFORE 296
+#define NOTAFTER 297
+#define MYSELF 298
+#define SHA224_TOK 299
+#define SHA256_TOK 300
+#define SHA384_TOK 301
+#define SHA512_TOK 302
 #ifndef YYSTYPE_DEFINED
 #define YYSTYPE_DEFINED
 typedef union {
@@ -47,9 +54,8 @@ typedef union {
     struct privilege *privilege;
     struct sudo_digest *digest;
     struct sudo_command command;
+    struct command_options options;
     struct cmndtag tag;
-    struct selinux_info seinfo;
-    struct solaris_privs_info privinfo;
     char *string;
     int tok;
 } YYSTYPE;

@@ -42,9 +42,9 @@ A) The owner and permissions on the sudo binary appear to be OK but when
 Q) Sudo never gives me a chance to enter a password using PAM, it just
    says 'Sorry, try again.' three times and exits.
 A) You didn't setup PAM to work with sudo.  On RedHat Linux or Fedora
-   Core this generally means installing sample.pam as /etc/pam.d/sudo.
-   See the sample.pam file for hints on what to use for other Linux
-   systems.
+   Core this generally means installing the sample pam.conf file as
+   /etc/pam.d/sudo.  See the example pam.conf file for hints on what
+   to use for other Linux systems.
 
 Q) Sudo says 'Account expired or PAM config lacks an "account"
    section for sudo, contact your system administrator' and exits
@@ -57,7 +57,7 @@ A) Your PAM config lacks an "account" specification.  On Linux this
 Q) Sudo is setup to log via syslog(3) but I'm not getting any log
    messages.
 A) Make sure you have an entry in your syslog.conf file to save
-   the sudo messages (see the sample.syslog.conf file).  The default
+   the sudo messages (see the example syslog.conf file).  The default
    log facility is authpriv (changeable via configure or in sudoers).
    Don't forget to send a SIGHUP to your syslogd so that it re-reads
    its conf file.  Also, remember that syslogd does *not* create
@@ -113,37 +113,19 @@ A) You can specify the editor to use in visudo in the sudoers file.
    --with-editor and --with-env-editor configure options.
 
 Q) Sudo appears to be removing some variables from my environment, why?
-A) Sudo removes the following "dangerous" environment variables
-   to guard against shared library spoofing, shell voodoo, and
-   kerberos server spoofing.
-     IFS
-     LOCALDOMAIN
-     RES_OPTIONS
-     HOSTALIASES
-     NLSPATH
-     PATH_LOCALE
-     TERMINFO
-     TERMINFO_DIRS
-     TERMPATH
-     TERMCAP
-     ENV
-     BASH_ENV
-     LC_ (if it contains a '/' or '%')
-     LANG (if it contains a '/' or '%')
-     LANGUAGE (if it contains a '/' or '%')
-     LD_*
-     _RLD_*
-     SHLIB_PATH (HP-UX only)
-     LIBPATH (AIX only)
-     KRB5_CONFIG (kerb5 only)
-     VAR_ACE (SecurID only)
-     USR_ACE (SecurID only)
-     DLC_ACE (SecurID only)
+A) By default, sudo runs commands with  new, minimal environment.
+   It is possible to control what environment variables are copied
+   from the invoking user's environment using the "env_keep" setting
+   in sudoers.  Another, less secure, option is to disable the
+   "env_reset" setting to copy all variables from the invoking
+   user's environment that are not considered "dangerous".  See the
+   "Command Environment" section of the sudoers manual for more
+   information.
 
 Q) How can I keep sudo from asking for a password?
 A) To specify this on a per-user (and per-command) basis, use the
    'NOPASSWD' tag right before the command list in sudoers.  See
-   the sudoers man page and sample.sudoers for details.  To disable
+   the sudoers man page and examples/sudoers for details.  To disable
    passwords completely, add !authenticate" to the Defaults line
    in /etc/sudoers.  You can also turn off authentication on a
    per-user or per-host basis using a user or host-specific Defaults
@@ -169,18 +151,8 @@ A) configure caches the results of its tests in a file called
    Note that "make realclean" will also remove any object files
    and configure temp files that are laying around as well.
 
-Q) I built sudo on a Solaris >= 2.6 machine but the resulting binary
-   doesn't work on Solaris <= 2.5.1.  Why?
-A) Starting with Solaris 2.6, snprintf(3) is included in the standard
-   C library.  To build a version of sudo on a >= 2.6 machine that
-   will run on a <= 2.5.1 machine, edit config.h and comment out the lines:
-	#define HAVE_SNPRINTF 1
-	#define HAVE_VSNPRINTF 1
-   and run make.
-
 Q) I built sudo on a Solaris 11 (or higher) machine but the resulting
    binary doesn't work older Solaris versions.  Why?
-
 A) Starting with Solaris 11, asprintf(3) is included in the standard
    C library.  To build a version of sudo on a Solaris 11 machine that
    will run on an older Solaris release, edit config.h and comment out
@@ -267,7 +239,7 @@ A) AIX's Enhanced RBAC is preventing sudo from running.  To fix
 
     /usr/local/bin/sudo:
 	    accessauths = ALLOW_ALL
-	    innateprivs = PV_DAC_GID,PV_DAC_O,PV_DAC_R,PV_DAC_UID,PV_DAC_W,PV_DAC_X,PV_FS_CHOWN,PV_PROC_ENV,PV_PROC_PRIO,PV_PROC_RAC
+	    innateprivs = PV_DAC_GID,PV_DAC_R,PV_DAC_UID,PV_DAC_X,PV_FS_CHOWN,PV_PROC_PRIO,PV_NET_PORT,PV_NET_CNTL,PV_SU_UID
 	    secflags = FSF_EPS
 
 Q) Sudo configures and builds without error but when I run it I get

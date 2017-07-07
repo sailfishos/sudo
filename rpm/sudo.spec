@@ -9,8 +9,8 @@ Name:       sudo
 # << macros
 
 Summary:    Execute some commands as root
-Version:    1.8.10p3
-Release:    2
+Version:    1.8.20p2
+Release:    1
 Group:      Applications/System
 License:    BSD3c
 URL:        http://www.sudo.ws/
@@ -68,9 +68,9 @@ rm -rf %{buildroot}
 # >> install post
 install -d -m 755 %{buildroot}%{_sysconfdir}/pam.d
 install -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/pam.d/sudo
-install -d -m 755 %{buildroot}%{_localstatedir}/lib/sudo
 rm -rf %{buildroot}/usr/share/locale
 rm -f %{buildroot}/usr/include/sudo_plugin.h
+rm -f %{buildroot}%{_sysconfdir}/sudoers.dist
 # << install post
 
 %files
@@ -86,5 +86,5 @@ rm -f %{buildroot}/usr/include/sudo_plugin.h
 %{_bindir}/sudoreplay
 %{_sbindir}/visudo
 %{_libexecdir}/sudo
-%attr(0700,root,root) %dir %ghost %{_localstatedir}/lib/sudo
+%{_libdir}/tmpfiles.d/sudo.conf
 # << files
