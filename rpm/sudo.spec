@@ -2,13 +2,11 @@ Name:       sudo
 Summary:    Execute some commands as root
 Version:    1.8.20p2
 Release:    1
-Group:      Applications/System
 License:    BSD3c
 URL:        http://www.sudo.ws/
 Source0:    %{name}-%{version}.tar.gz
 Source1:    sudo.pamd
 BuildRequires:  pam-devel
-BuildRequires:  groff
 
 %description
 Sudo is a command that allows users to execute some commands as root.
@@ -51,13 +49,13 @@ make install DESTDIR=%{buildroot} install_uid=`id -u` install_gid=`id -g` sudoer
 install -d -m 755 %{buildroot}%{_sysconfdir}/pam.d
 install -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/pam.d/sudo
 rm -rf %{buildroot}/usr/share/locale
+rm -rf %{buildroot}%{_mandir}
 rm -f %{buildroot}/usr/include/sudo_plugin.h
 rm -f %{buildroot}%{_sysconfdir}/sudoers.dist
 
 %files
 %defattr(-,root,root,-)
 %doc %{_docdir}/%{name}
-%doc %{_mandir}/man?/*
 %config(noreplace) %attr(0440,root,root) %{_sysconfdir}/sudoers
 %dir %{_sysconfdir}/sudoers.d
 %config %{_sysconfdir}/pam.d/sudo
