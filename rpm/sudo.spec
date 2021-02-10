@@ -6,6 +6,7 @@ License:    BSD3c
 URL:        http://www.sudo.ws/
 Source0:    %{name}-%{version}.tar.gz
 Source1:    sudo.pamd
+Source2:    01_keep_zypp_logfile
 BuildRequires:  pam-devel
 
 %description
@@ -48,6 +49,8 @@ make install DESTDIR=%{buildroot} install_uid=`id -u` install_gid=`id -g` sudoer
 
 install -d -m 755 %{buildroot}%{_sysconfdir}/pam.d
 install -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/pam.d/sudo
+install -d -m 755 %{buildroot}%{_sysconfdir}/sudoers.d
+install -m 644 %{SOURCE2} %{buildroot}%{_sysconfdir}/sudoers.d/01_keep_zypp_logfile
 rm -rf %{buildroot}/usr/share/locale
 rm -rf %{buildroot}%{_mandir}
 rm -f %{buildroot}/usr/include/sudo_plugin.h
@@ -57,6 +60,7 @@ rm -f %{buildroot}%{_sysconfdir}/sudoers.dist
 %defattr(-,root,root,-)
 %doc %{_docdir}/%{name}
 %config(noreplace) %attr(0440,root,root) %{_sysconfdir}/sudoers
+%{_sysconfdir}/sudoers.d/01_keep_zypp_logfile
 %dir %{_sysconfdir}/sudoers.d
 %config %{_sysconfdir}/pam.d/sudo
 %attr(4755,root,root) %{_bindir}/sudo
