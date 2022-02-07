@@ -1,8 +1,8 @@
 Name:       sudo
 Summary:    Execute some commands as root
-Version:    1.8.20p2
+Version:    1.9.9
 Release:    1
-License:    BSD3c
+License:    ISC
 URL:        http://www.sudo.ws/
 Source0:    %{name}-%{version}.tar.gz
 Source1:    sudo.pamd
@@ -20,11 +20,12 @@ minutes by default).
 
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q -n %{name}-%{version}/upstream
 
 %build
 
 %configure --disable-static \
+    --disable-log-server \
     --libexecdir=%{_libexecdir}/sudo \
     --docdir=%{_docdir}/%{name} \
     --with-noexec=%{_libexecdir}/sudo/sudo_noexec.so \
@@ -58,6 +59,7 @@ rm -f %{buildroot}%{_sysconfdir}/sudoers.dist
 
 %files
 %defattr(-,root,root,-)
+%license LICENSE.md
 %doc %{_docdir}/%{name}
 %config(noreplace) %attr(0440,root,root) %{_sysconfdir}/sudoers
 %{_sysconfdir}/sudoers.d/01_keep_zypp_logfile
@@ -67,5 +69,7 @@ rm -f %{buildroot}%{_sysconfdir}/sudoers.dist
 %attr(4755,root,root) %{_bindir}/sudoedit
 %{_bindir}/sudoreplay
 %{_sbindir}/visudo
+%{_bindir}/cvtsudoers
 %{_libexecdir}/sudo
 %{_libdir}/tmpfiles.d/sudo.conf
+%attr(0640,root,root) %config(noreplace) /etc/sudo.conf
