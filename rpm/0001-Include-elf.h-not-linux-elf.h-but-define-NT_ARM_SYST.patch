@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "Todd C. Miller" <Todd.Miller@sudo.ws>
+Date: Mon, 23 Jan 2023 13:55:23 -0700
+Subject: [PATCH] Include elf.h, not linux/elf.h but define NT_ARM_SYSTEM_CALL
+ if missing. Older kernel headers are missing the definition of EM_ARM in
+ linux/elf.h. GitHub issue #232
+
+---
+ src/exec_ptrace.h | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/src/exec_ptrace.h b/src/exec_ptrace.h
+index b35572c7b..0828b4131 100644
+--- a/src/exec_ptrace.h
++++ b/src/exec_ptrace.h
+@@ -22,16 +22,23 @@
+ #include <sys/user.h>
+ #include <asm/unistd.h>
+ #include <linux/audit.h>
+-#include <linux/elf.h>
+ #include <linux/ptrace.h>
+ #include <linux/seccomp.h>
+ #include <linux/filter.h>
+ 
++/* Older kernel headers may be missing some EM_* defines in linux/elf.h. */
++#include <elf.h>
++
+ /* Older systems may not support execveat(2). */
+ #ifndef __NR_execveat
+ # define __NR_execveat	-1
+ #endif
+ 
++/* In case userland elf.h doesn't define NT_ARM_SYSTEM_CALL. */
++#if defined(__aarch64__) && !defined(NT_ARM_SYSTEM_CALL)
++# define NT_ARM_SYSTEM_CALL 0x404
++#endif
++
+ /* In case userland doesn't define __X32_SYSCALL_BIT. */
+ #if defined(__x86_64__) && !defined(__X32_SYSCALL_BIT)
+ # define __X32_SYSCALL_BIT 0x40000000

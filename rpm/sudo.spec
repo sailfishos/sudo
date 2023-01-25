@@ -1,12 +1,13 @@
 Name:       sudo
 Summary:    Execute some commands as root
-Version:    1.9.9
+Version:    1.9.12p2
 Release:    1
 License:    ISC
 URL:        http://www.sudo.ws/
 Source0:    %{name}-%{version}.tar.gz
 Source1:    sudo.pamd
 Source2:    01_keep_zypp_logfile
+Patch0:     0001-Include-elf.h-not-linux-elf.h-but-define-NT_ARM_SYST.patch
 BuildRequires:  pam-devel
 
 %description
@@ -20,7 +21,7 @@ minutes by default).
 
 
 %prep
-%setup -q -n %{name}-%{version}/upstream
+%autosetup -p1 -n %{name}-%{version}/upstream
 
 %build
 
@@ -42,7 +43,7 @@ minutes by default).
     --with-env-editor \
     --with-secure-path=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/sbin:/usr/sbin:/root/bin
 
-make %{?_smp_mflags}
+%make_build
 
 %install
 rm -rf %{buildroot}
