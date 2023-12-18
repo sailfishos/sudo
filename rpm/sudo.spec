@@ -1,13 +1,12 @@
 Name:       sudo
 Summary:    Execute some commands as root
-Version:    1.9.12p2
+Version:    1.9.15p4
 Release:    1
 License:    ISC
 URL:        http://www.sudo.ws/
 Source0:    %{name}-%{version}.tar.gz
 Source1:    sudo.pamd
 Source2:    01_keep_zypp_logfile
-Patch0:     0001-Include-elf.h-not-linux-elf.h-but-define-NT_ARM_SYST.patch
 BuildRequires:  pam-devel
 
 %description
