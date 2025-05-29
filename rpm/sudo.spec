@@ -1,9 +1,9 @@
 Name:       sudo
 Summary:    Execute some commands as root
-Version:    1.9.15p4
+Version:    1.9.16p2
 Release:    1
 License:    ISC
-URL:        http://www.sudo.ws/
+URL:        https://github.com/sailfishos/sudo
 Source0:    %{name}-%{version}.tar.gz
 Source1:    sudo.pamd
 Source2:    01_keep_zypp_logfile
@@ -45,7 +45,6 @@ minutes by default).
 %make_build
 
 %install
-rm -rf %{buildroot}
 make install DESTDIR=%{buildroot} install_uid=`id -u` install_gid=`id -g` sudoers_uid=`id -u` sudoers_gid=`id -g`
 
 install -d -m 755 %{buildroot}%{_sysconfdir}/pam.d
@@ -58,7 +57,6 @@ rm -f %{buildroot}/usr/include/sudo_plugin.h
 rm -f %{buildroot}%{_sysconfdir}/sudoers.dist
 
 %files
-%defattr(-,root,root,-)
 %license LICENSE.md
 %doc %{_docdir}/%{name}
 %config(noreplace) %attr(0440,root,root) %{_sysconfdir}/sudoers
