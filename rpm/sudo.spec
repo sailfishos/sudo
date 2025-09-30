@@ -1,6 +1,6 @@
 Name:       sudo
 Summary:    Execute some commands as root
-Version:    1.9.16p2
+Version:    1.9.17p2
 Release:    1
 License:    ISC
 URL:        https://github.com/sailfishos/sudo
